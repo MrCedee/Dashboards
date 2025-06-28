@@ -10,7 +10,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from config import FECHA_CORTE
 # --- Importa las vistas correctamente ---
-from src.dashboards.views import general
+from src.dashboards.views import general, performance
 # --- Sidebar navegación ---
 st.sidebar.title("Menú de navegación")
 
@@ -36,17 +36,13 @@ st.caption(f"FECHA: {FECHA_CORTE.strftime('%d/%m/%Y')}")
 if selected_view == "Resumen General":
     general.show()  # Llama a la función principal de la vista General
 elif selected_view == "Rendimiento & Métricas":
-    st.header("Vista: Rendimiento & Métricas")
-    st.info("Comparativa de retornos, métricas de riesgo, Sharpe, Sortino, drawdown, etc.")
+    performance.show()
 elif selected_view == "Siguiente Movimiento":
     st.header("Vista: Siguiente Movimiento")
     st.info("Recomendación IA, sentimiento de mercado y comparación de pesos recomendados.")
 elif selected_view == "Resumen por Activo":
     st.header("Vista: Resumen por Activo")
     st.info("KPIs fundamentales, gráfico histórico de peso y detalle por activo.")
-elif selected_view == "Riesgo":
-    st.header("Vista: Riesgo")
-    st.info("Correlaciones, volatilidad, betas, matriz de covarianza y diversificación.")
 elif selected_view == "Transacciones":
     st.header("Vista: Transacciones")
     st.info("Tabla con todas las transacciones, filtros y KPIs de actividad.")
