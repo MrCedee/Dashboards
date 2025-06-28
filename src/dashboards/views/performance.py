@@ -8,142 +8,78 @@ from src.utils.metrics import (
 )
 from config import PORTFOLIO_HISTORY_PATH, BENCHMARKS_PATH, WEIGHTS_PATH, RF
 
-# ---- AYUDA Y COLORES REVISADOS ----
+# ----- METAINFORMACIÓN -----
 METRIC_INFO = {
-    "Sharpe Ratio": {
-        "help": "Sharpe mide la rentabilidad ajustada al riesgo. >1 bueno, <0.5 pobre.",
-        "good": 1.0, "bad": 0.5, "icon": "📈"
-    },
-    "Sortino Ratio": {
-        "help": "Sortino es como Sharpe pero solo penaliza las caídas. >1 muy bueno.",
-        "good": 1.0, "bad": 0.5, "icon": "📉"
-    },
-    "Max Drawdown (%)": {
-        "help": "Mayor caída desde un máximo. Más negativo = peor. <10% poco riesgo, >30% mucho riesgo.",
-        "good": -10, "bad": -30, "icon": "📉"
-    },
-    "ARR (Anualiz., %)": {
-        "help": "Rentabilidad anualizada de la cartera.",
-        "good": 8, "bad": 2, "icon": "💸"
-    },
-    "Beta (vs SP500)": {
-        "help": "Sensibilidad al mercado SP500. 1=igual, >1 más volátil.",
-        "good": 1.0, "bad": 1.2, "icon": "🧭"
-    },
-    "Alpha (anual, vs SP500)": {
-        "help": "Diferencial de rentabilidad anualizada respecto al SP500. >0 mejor.",
-        "good": 0.0, "bad": -0.05, "icon": "✨"
-    },
-    "Effective N": {
-        "help": "Nivel de diversificación. El máximo es el número de activos en cartera.",
-        "good": 5, "bad": 2, "icon": "🔢"
-    },
-    "Turnover (%)": {
-        "help": "Rotación anual de la cartera. 0-100% normal. >200% = trading excesivo.",
-        "good": 100, "bad": 200, "icon": "🔁"
-    }
+    "Sharpe Ratio":      {"help": "Sharpe mide la rentabilidad ajustada al riesgo. >1 bueno, <0.5 pobre.", "icon": "📈"},
+    "Sortino Ratio":     {"help": "Como Sharpe, pero solo penaliza caídas. >1 muy bueno.", "icon": "📉"},
+    "Max Drawdown (%)":  {"help": "Mayor caída desde un máximo. Más negativo = peor. <10% poco riesgo, >30% mucho riesgo.", "icon": "📉"},
+    "ARR (%)":           {"help": "Rentabilidad anualizada de la cartera.", "icon": "💸"},
+    "Effective N":       {"help": "Nivel de diversificación. Máximo=número de activos.", "icon": "🔢"},
+    "Turnover (%)":      {"help": "Rotación anual. <100% normal, >200% trading excesivo.", "icon": "🔁"},
+    "Alpha (anual, vs SP500)": {"help": "Diferencial de rentabilidad anualizada respecto a SP500. >0 mejor.", "icon": "✨"},
+    "Beta (vs SP500)":   {"help": "Sensibilidad al mercado SP500. 1=igual, >1 más volátil.", "icon": "🧭"},
 }
 
-def color_metric(metric, value):
-    info = METRIC_INFO.get(metric, {})
-    # --- Porcentajes: Max Drawdown, ARR, Turnover
+# SOLO METRICAS CLAVE EN RESUMEN
+KPI_MAIN = ["Sharpe Ratio", "ARR (%)", "Max Drawdown (%)", "Effective N"]
+# MÉTRICAS SECUNDARIAS (incluye Sortino ahora)
+KPI_SEC = ["Sortino Ratio", "Turnover (%)", "Alpha (anual, vs SP500)", "Beta (vs SP500)"]
+
+def metric_color(metric, value):
+    if metric in ["Sharpe Ratio", "Sortino Ratio"]:
+        if value >= 1: return "#b9f6ca"
+        elif value < 0.5: return "#ffcdd2"
+        else: return "#fff9c4"
+    if metric == "ARR (%)":
+        if value >= 8: return "#b9f6ca"
+        elif value <= 2: return "#ffcdd2"
+        else: return "#fff9c4"
     if metric == "Max Drawdown (%)":
-        # Aquí: valor más cercano a 0 es mejor, más negativo es peor
-        if value > info["good"]:
-            return "#b9f6ca"  # verde
-        elif value <= info["bad"]:
-            return "#ffcdd2"  # rojo
-        else:
-            return "#fff9c4"  # amarillo
-    elif metric == "ARR (Anualiz., %)":
-        if value >= info["good"]:
-            return "#b9f6ca"
-        elif value <= info["bad"]:
-            return "#ffcdd2"
-        else:
-            return "#fff9c4"
-    elif metric == "Turnover (%)":
-        # 0-100% verde, 100-200% amarillo, >200% rojo
-        if value <= info["good"]:
-            return "#b9f6ca"
-        elif value <= info["bad"]:
-            return "#fff9c4"
-        else:
-            return "#ffcdd2"
-    elif metric == "Alpha (anual, vs SP500)":
-        # >0 verde, <-5% rojo
-        if value > info["good"]:
-            return "#b9f6ca"
-        elif value <= info["bad"]:
-            return "#ffcdd2"
-        else:
-            return "#fff9c4"
-    elif metric == "Beta (vs SP500)":
-        # 0.9-1.1 verde, fuera de ese rango amarillo o rojo
-        if 0.9 <= value <= 1.1:
-            return "#b9f6ca"
-        elif value < 0.7 or value > 1.3:
-            return "#ffcdd2"
-        else:
-            return "#fff9c4"
-    elif metric == "Effective N":
-        if value >= info["good"]:
-            return "#b9f6ca"
-        elif value <= info["bad"]:
-            return "#ffcdd2"
-        else:
-            return "#fff9c4"
-    else:
-        # Ratios generales (Sharpe, Sortino...)
-        if value >= info.get("good", 0):
-            return "#b9f6ca"
-        elif value <= info.get("bad", 0):
-            return "#ffcdd2"
-        else:
-            return "#fff9c4"
+        if value > -10: return "#b9f6ca"
+        elif value < -30: return "#ffcdd2"
+        else: return "#fff9c4"
+    if metric == "Effective N":
+        if value > 0.66: return "#b9f6ca"
+        elif value < 0.33: return "#ffcdd2"
+        else: return "#fff9c4"
+    if metric == "Turnover (%)":
+        if value <= 100: return "#b9f6ca"
+        elif value <= 200: return "#fff9c4"
+        else: return "#ffcdd2"
+    if metric == "Alpha (anual, vs SP500)":
+        if value > 0: return "#b9f6ca"
+        elif value < -0.05: return "#ffcdd2"
+        else: return "#fff9c4"
+    if metric == "Beta (vs SP500)":
+        if 0.9 <= value <= 1.1: return "#b9f6ca"
+        elif value < 0.7 or value > 1.3: return "#ffcdd2"
+        else: return "#fff9c4"
+    return "#f6f6fa"
 
+def format_metric(metric, value, n_assets=None):
+    if value is None:
+        return "—"
+    if metric in ["ARR (%)", "Turnover (%)", "Max Drawdown (%)"]:
+        return f"{value:.1f}%"
+    if metric == "Effective N":
+        return f"{value:.1f} / {n_assets}"
+    if metric.startswith("Alpha"):
+        return f"{value:.2f}"
+    return f"{value:.2f}"
 
-def metric_card(label, value, fmt=":.2f", icon=None, help_text=None, color=None, suffix=""):
-    color = color or "#F6F6FA"
-    try:
-        if "(%)" in label:
-            value_disp = f"{100*float(value):.1f}%"
-        elif "Effective N" in label:
-            value_disp = f"{value}{suffix}"
-        else:
-            value_disp = f"{float(value):.2f}{suffix}"
-    except Exception:
-        value_disp = "—"
-    st.markdown(
-        f"<div style='padding:10px 16px;background:{color};border-radius:8px;display:inline-block;width:170px'>"
-        f"<span style='font-size:1.6em'>{icon or ''}</span>"
-        f"<b style='font-size:1em'>{label}</b><br>"
-        f"<span style='color:#0b7285;font-size:1.5em'>{value_disp}</span>"
-        f"</div>", unsafe_allow_html=True
-    )
-    if help_text:
-        st.caption(f"ℹ️ {help_text}")
-
-def get_sp500_bench(benchmarks):
-    # Busca SP500 en keys sin importar mayúsculas, si no el primero
-    for k in benchmarks.keys():
-        if k.lower() == "sp500":
-            return benchmarks[k]
-    # Si no hay, devuelve el primero por orden
-    return next(iter(benchmarks.values()))
-
-def calc_metrics(df, df_alloc, num_assets, is_portfolio=True, sp500_bench=None):
-    metrics = {}
-    col = "portfolio_value" if is_portfolio else "value"
-    metrics["Sharpe Ratio"] = get_sharpe_ratio(df, col=col, rf=RF)
-    metrics["Sortino Ratio"] = get_sortino_ratio(df, col=col, rf=RF)
-    metrics["Max Drawdown (%)"] = get_max_drawdown(df, col=col) 
-    metrics["ARR (Anualiz., %)"] = get_annualized_return(df, col=col) * 100
-    metrics["Effective N"] = f"{get_effective_n(df_alloc.iloc[-1].drop('date').values):.1f}"
-    metrics["Turnover (%)"] = get_turnover(df_alloc, df["date"].max())  if is_portfolio else None
-    # Alpha y Beta SIEMPRE frente a SP500
-    if sp500_bench is not None:
-        alpha, beta = get_alpha_beta(df, sp500_bench, col_port=col, col_bench="value")
+def get_metrics(df, df_alloc, n_assets, is_port=True, sp500=None):
+    col = "portfolio_value" if is_port else "value"
+    metrics = {
+        "Sharpe Ratio": get_sharpe_ratio(df, col, rf=RF),
+        "Sortino Ratio": get_sortino_ratio(df, col, rf=RF),
+        "ARR (%)": 100 * get_annualized_return(df, col),
+        "Max Drawdown (%)": 100 * get_max_drawdown(df, col),
+        "Effective N": get_effective_n(df_alloc.iloc[-1].drop('date').values),
+        "Turnover (%)": get_turnover(df_alloc, df["date"].max()) if is_port else None,
+    }
+    # Alpha y beta solo vs sp500
+    if sp500 is not None:
+        alpha, beta = get_alpha_beta(df, sp500, col_port=col, col_bench="value")
         metrics["Alpha (anual, vs SP500)"] = alpha
         metrics["Beta (vs SP500)"] = beta
     else:
@@ -151,39 +87,53 @@ def calc_metrics(df, df_alloc, num_assets, is_portfolio=True, sp500_bench=None):
         metrics["Beta (vs SP500)"] = None
     return metrics
 
-# -------------------------------
-# VISTA PRINCIPAL
-# -------------------------------
+def get_sp500_bench(benchmarks):
+    for k in benchmarks:
+        if k.lower() == "sp500":
+            return benchmarks[k]
+    return next(iter(benchmarks.values()))
+
 def vista_performance():
     st.title("Rendimiento y Métricas")
+
     df_portfolio = load_portfolio_history(PORTFOLIO_HISTORY_PATH)
     benchmarks = load_benchmarks(BENCHMARKS_PATH)
     df_alloc = load_asset_allocation(WEIGHTS_PATH)
-    bench_names = list(benchmarks.keys())
+    df_alloc['date'] = pd.to_datetime(df_alloc['date'])
+    n_assets = len(df_alloc.sort_values('date').iloc[-1].drop("date"))
 
-    # Encuentra el benchmark SP500 para cálculos de alpha/beta
     df_sp500 = get_sp500_bench(benchmarks)
 
-    # Número de activos actuales
-    df_alloc['date'] = pd.to_datetime(df_alloc['date'])
-    num_assets = len(df_alloc.sort_values('date').iloc[-1].drop("date"))
+    # --- KPIs cartera principales y secundarios
+    metrics = get_metrics(df_portfolio, df_alloc, n_assets, True, df_sp500)
 
-    # KPIs cartera
-    st.markdown("#### Métricas clave de la cartera")
-    metrics = calc_metrics(df_portfolio, df_alloc, num_assets, is_portfolio=True, sp500_bench=df_sp500)
-    col1, col2, col3, col4 = st.columns(4)
-    cards = list(metrics.items())
-    for i, (metric, value) in enumerate(cards):
-        color = color_metric(metric, float(str(value).split()[0]) if value not in [None, "None", "—"] else 0)
-        icon = METRIC_INFO.get(metric, {}).get("icon", "")
-        help_text = METRIC_INFO.get(metric, {}).get("help", "")
-        suffix = "" if "Effective N" not in metric else f" / {num_assets}"
-        col = [col1, col2, col3, col4][i % 4]
-        metric_card(metric, value if value is not None else "—", icon=icon, help_text=help_text, color=color, suffix=suffix)
-    st.markdown("---")
+    # --- RESUMEN EJECUTIVO
+    mejor_kpi = sum([metrics["Sharpe Ratio"] > 1, metrics["ARR (%)"] > 8])
+    badge = "🥇" if mejor_kpi >= 2 else ("🟢" if mejor_kpi == 1 else "🟠")
+    st.markdown(
+        f"<div style='font-size:1.2em;font-weight:bold;background:#eef8ed;padding:10px 20px;border-radius:12px;display:inline-block'>"
+        f"{badge} Tu cartera tiene un Sharpe de <b>{metrics['Sharpe Ratio']:.2f}</b> y una rentabilidad anualizada de <b>{metrics['ARR (%)']:.1f}%</b>. "
+        f"Diversificación: <b>{metrics['Effective N']:.1f}/{n_assets}</b>. "
+        f"MDD: <b>{metrics['Max Drawdown (%)']:.1f}%</b>."
+        "</div>", unsafe_allow_html=True
+    )
 
-    # Tabs: Comparar con benchmark
-    tabs = st.tabs(["Retornos diarios", "Comparar métricas con benchmark"])
+    # --- KPIs principales en GRID tipo tabla ---
+    # (Eliminado st.markdown("#### Métricas clave de la cartera"))
+
+    # --- KPIs secundarios en una sola fila (ahora incluye Sortino) ---
+    st.markdown("#### Métricas avanzadas")
+    cols = st.columns(len(KPI_SEC))
+    for i, m in enumerate(KPI_SEC):
+        cols[i].markdown(
+            f"<div style='background:{metric_color(m, metrics[m] if metrics[m] is not None else 0)};border-radius:10px;padding:10px 8px 4px 8px;margin:0 4px;min-height:86px;text-align:center'>"
+            f"<span title='{METRIC_INFO[m]['help']}'>{METRIC_INFO[m]['icon']} <b>{m}</b></span><br>"
+            f"<span style='font-size:1.4em'>{format_metric(m, metrics[m], n_assets)}</span>"
+            "</div>", unsafe_allow_html=True
+        )
+
+    # --- TAB COMPARATIVA ---
+    tabs = st.tabs(["Retornos diarios", "Comparar métricas"])
     with tabs[0]:
         st.markdown("##### Histórico de retornos diarios")
         r_port = get_daily_returns(df_portfolio, col="portfolio_value")
@@ -192,41 +142,51 @@ def vista_performance():
             r_bmk = get_daily_returns(df_bench, col="value")
             df_plot[name] = r_bmk.values
         fig = px.line(df_plot, x="Fecha", y=df_plot.columns[1:], title="Retorno diario: Cartera vs Benchmarks")
-        fig.update_layout(legend=dict(orientation="h", x=0.5, xanchor="center"))
+        fig.update_layout(
+            legend=dict(orientation="h", x=0.5, xanchor="center"),
+            yaxis_title="Retorno diario",
+            xaxis_title="Fecha"
+        )
+        # Cartera destacado
+        fig.update_traces(line=dict(width=3), selector=dict(name="Cartera"))
         st.plotly_chart(fig, use_container_width=True)
 
     with tabs[1]:
         st.markdown("##### Comparativa con benchmark")
-        bench_sel = st.selectbox("Selecciona benchmark", bench_names, key="bench2")
+        bench_names = list(benchmarks.keys())
+        bench_sel = st.selectbox("Selecciona benchmark", bench_names)
         df_bench = benchmarks[bench_sel]
-        met_port = calc_metrics(df_portfolio, df_alloc, num_assets, is_portfolio=True, sp500_bench=df_sp500)
-        met_bench = calc_metrics(df_bench, df_alloc, num_assets, is_portfolio=False, sp500_bench=df_sp500)
+        met_port = get_metrics(df_portfolio, df_alloc, n_assets, True, df_sp500)
+        met_bench = get_metrics(df_bench, df_alloc, n_assets, False, df_sp500)
 
-        # Visual: tarjetas lado a lado
-        st.markdown("###### Comparativa de métricas")
+        # Tabla comparativa
         rows = list(met_port.keys())
-        col_port, col_bench = st.columns(2)
-        with col_port:
-            st.markdown("**Cartera**")
-            for m in rows:
-                color = color_metric(m, float(str(met_port[m]).split()[0]) if met_port[m] not in [None, "None", "—"] else 0)
-                icon = METRIC_INFO.get(m, {}).get("icon", "")
-                metric_card(m, met_port[m] if met_port[m] is not None else "—", icon=icon, help_text=None, color=color)
-        with col_bench:
-            st.markdown("**Benchmark**")
-            for m in rows:
-                color = color_metric(m, float(str(met_bench[m]).split()[0]) if met_bench[m] not in [None, "None", "—"] else 0)
-                icon = METRIC_INFO.get(m, {}).get("icon", "")
-                metric_card(m, met_bench[m] if met_bench[m] is not None else "—", icon=icon, help_text=None, color=color)
+        tabla = []
+        for m in rows:
+            port_v = met_port[m] if met_port[m] is not None else 0
+            bench_v = met_bench[m] if met_bench[m] is not None else 0
+            diff = port_v - bench_v if (port_v is not None and bench_v is not None) else 0
+            mejor = "🔼" if (m not in ["Max Drawdown (%)", "Turnover (%)", "Beta (vs SP500)"] and diff > 0) or (m in ["Max Drawdown (%)"] and diff > 0) else "🔽"
+            color_p = metric_color(m, port_v)
+            color_b = metric_color(m, bench_v)
+            tabla.append({
+                "Métrica": f"{METRIC_INFO[m]['icon']} {m}",
+                "Cartera": f"<div style='background:{color_p};border-radius:6px;padding:2px 8px'>{format_metric(m, port_v, n_assets)}</div>",
+                "Benchmark": f"<div style='background:{color_b};border-radius:6px;padding:2px 8px'>{format_metric(m, bench_v, n_assets)}</div>",
+                "": mejor
+            })
+        df_tabla = pd.DataFrame(tabla)
+        st.markdown(df_tabla.to_html(escape=False, index=False), unsafe_allow_html=True)
 
-        # Visual: gráfico de barras lado a lado
-        st.markdown("###### Diferencias visuales")
-        df_compare = pd.DataFrame({
-            "Métrica": rows,
-            "Cartera": [float(str(met_port[m]).split()[0]) if met_port[m] not in [None, "None", "—"] else 0 for m in rows],
-            "Benchmark": [float(str(met_bench[m]).split()[0]) if met_bench[m] not in [None, "None", "—"] else 0 for m in rows],
+        # Mini barras solo para KPIs principales
+        st.markdown("###### Comparativa visual de KPIs principales")
+        kpi_show = KPI_MAIN
+        df_barras = pd.DataFrame({
+            "Métrica": kpi_show,
+            "Cartera": [met_port[m] if met_port[m] is not None else 0 for m in kpi_show],
+            "Benchmark": [met_bench[m] if met_bench[m] is not None else 0 for m in kpi_show],
         })
-        fig = px.bar(df_compare, x="Métrica", y=["Cartera", "Benchmark"], barmode="group")
+        fig = px.bar(df_barras, x="Métrica", y=["Cartera", "Benchmark"], barmode="group")
         st.plotly_chart(fig, use_container_width=True)
 
 def show():
