@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]  # Ajusta el número si cambias la profundidad
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-
+from config import FECHA_CORTE
 # --- Importa las vistas correctamente ---
 from src.dashboards.views import general
 # --- Sidebar navegación ---
@@ -29,7 +29,7 @@ selected_view = st.sidebar.selectbox("Selecciona una vista:", VIEWS)
 # --- Cabecera general ---
 st.title("Portfolio Manager Demo")
 st.caption("TFM • Marcos Cedenilla Bonet")
-
+st.caption(f"FECHA: {FECHA_CORTE.strftime('%d/%m/%Y')}")
 
 
 # --- Router principal ---
