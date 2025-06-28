@@ -28,3 +28,17 @@ def load_dashboard_general_data(portfolio_path, benchmarks_folder, allocation_pa
     allocation = load_asset_allocation(allocation_path)
     benchmarks = load_benchmarks(benchmarks_folder)
     return portfolio, benchmarks, allocation
+
+def load_fundamentals(folder_path, ticker):
+    path = os.path.join(folder_path, f"{ticker}_fundamentales.csv")
+    df = pd.read_csv(path)
+    if "date" in df.columns:
+        df["date"] = pd.to_datetime(df["date"])
+    return df
+
+def load_technicals(folder_path, ticker):
+    path = os.path.join(folder_path, f"{ticker}.csv")
+    df = pd.read_csv(path)
+    if "date" in df.columns:
+        df["date"] = pd.to_datetime(df["date"])
+    return df
