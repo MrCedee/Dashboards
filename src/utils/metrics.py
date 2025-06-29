@@ -123,3 +123,56 @@ def get_kpis(df, col="portfolio_value", rf=0.0, periods_per_year=252):
         "var": get_var(get_daily_returns(df, col)),
     }
 
+def get_transaction_table(df_alloc, df_prices):
+    """
+    Para cada cambio de peso en un activo, genera una fila de transacción.
+    El cambio se supone realizado al cierre del día anterior,
+    y la rentabilidad de la operación se calcula entre el cierre de T-1 y el cierre de T.
+    """
+    df_alloc = df_alloc.copy()
+    df_prices = df_prices.copy()
+
+    df_alloc['date'] = pd.to_datetime(df_alloc['date'])
+    df_alloc = df_alloc.sort_values('date').set_index('date')
+    df_prices['date'] = pd.to_datetime(df_prices['date'])
+    df_prices = df_prices.sort_values('date').set_index('date')
+
+    activos = [col for col in df_alloc.columns if col != 'CASH']  # CASH no es operable
+    df_trans = []
+
+    for i in range(1, len(df_alloc)):
+        date = df_alloc.index[i]
+        prev_date = df_alloc.index[i-1]
+        prev = df_alloc.iloc[i-1]
+        curr = df_alloc.iloc[i]
+        for asset in activos:
+            change = curr[asset] - prev[asset]
+            if abs(change) > 1e-5:
+                action = "Compra" if change > 0 else "Venta"
+                # Precios de cierre anterior y actual
+                try:
+                    price_entry = df_prices.loc[prev_date, asset]
+                    price_exit = df_prices.loc[date, asset]
+                    ret_op = (price_exit - price_entry) / price_entry if price_entry != 0 else None
+                except Exception:
+                    price_entry = price_exit = ret_op = None
+                df_trans.append({
+                    "fecha": date,
+                    "activo": asset,
+                    "acción": action,
+                    "cambio_peso": change,
+                    "precio_entrada": price_entry,
+                    "precio_salida": price_exit,
+                    "retorno_op": ret_op
+                })
+    df_trans = pd.DataFrame(df_trans)
+    return df_trans
+
+def get_cash_series(df_alloc):
+    df_alloc = df_alloc.copy()
+    df_alloc['date'] = pd.to_datetime(df_alloc['date'])
+    df_alloc = df_alloc.sort_values('date')
+    if 'CASH' in df_alloc.columns:
+        return df_alloc[['date', 'CASH']]
+    else:
+        return pd.DataFrame(columns=['date', 'CASH'])

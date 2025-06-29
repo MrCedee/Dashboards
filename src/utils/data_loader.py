@@ -10,6 +10,12 @@ def load_asset_allocation(path):
     df = pd.read_csv(path)
     return df
 
+def load_asset_prices(path):
+    df = pd.read_csv(path)
+    if "date" in df.columns:
+        df["date"] = pd.to_datetime(df["date"])
+    return df
+
 def load_benchmarks(folder_path):
     """
     Devuelve un dict nombre -> df, con cada benchmark (csv) ya con su columna date parseada.

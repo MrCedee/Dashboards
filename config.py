@@ -7,5 +7,7 @@ BENCHMARKS_PATH = "C:/Users/marco/Desktop/Cede/estudios/UNIR/TFM/Desarrollo/dash
 WEIGHTS_PATH = "C:/Users/marco/Desktop/Cede/estudios/UNIR/TFM/Desarrollo/dashboards/data/raw/asset_allocation.csv"
 FUNDAMENTALS_PATH = "C:/Users/marco/Desktop/Cede/estudios/UNIR/TFM/Desarrollo/dashboards/data/raw/fundamentals"
 TECNICALS_PATH = "C:/Users/marco/Desktop/Cede/estudios/UNIR/TFM/Desarrollo/dashboards/data/raw/tecnicals"
+PRICES_PATH = "C:/Users/marco/Desktop/Cede/estudios/UNIR/TFM/Desarrollo/dashboards/data/raw/asset_prices.csv"
+
 
 RF = 0.02

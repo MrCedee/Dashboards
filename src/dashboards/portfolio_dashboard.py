@@ -10,7 +10,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from config import FECHA_CORTE
 # --- Importa las vistas correctamente ---
-from src.dashboards.views import general, performance, recommendation, asset_summary
+from src.dashboards.views import general, performance, recommendation, asset_summary, transactions
 # --- Sidebar navegación ---
 st.sidebar.title("Menú de navegación")
 
@@ -42,8 +42,7 @@ elif selected_view == "Siguiente Movimiento":
 elif selected_view == "Resumen por Activo":
     asset_summary.show()
 elif selected_view == "Transacciones":
-    st.header("Vista: Transacciones")
-    st.info("Tabla con todas las transacciones, filtros y KPIs de actividad.")
+    transactions.show()
 elif selected_view == "Situación de Mercado":
     st.header("Vista: Situación de Mercado")
     st.info("Indicadores macro, mercados globales y gráficos contextuales.")
