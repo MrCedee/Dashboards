@@ -19,7 +19,6 @@ VIEWS = [
     "Rendimiento & Métricas",
     "Siguiente Movimiento",
     "Resumen por Activo",
-    "Riesgo",
     "Transacciones",
     "Situación de Mercado"
 ]
