@@ -118,52 +118,72 @@ def vista_market():
     )
 
     with st.expander("Ver evolución histórica de los indicadores clave"):
-        # 1. Definir las pestañas, solo una para PIB+PIBreal
         tab_names = []
         tab_keys = []
-        # Añade la tab combinada de PIB y PIB real como la primera
         if "PIB" in macro_dict and "REALPIB" in macro_dict:
             tab_names.append("PIB y PIB real")
             tab_keys.append("PIB_REALPIB")
-        # Añade el resto, pero omite "PIB" y "REALPIB"
         for k in macro_keys:
             if k in ("PIB", "REALPIB"):
                 continue
             if k in macro_dict:
                 tab_names.append(MACRO_KPIS[k][0])
                 tab_keys.append(k)
+        if "INTRATE" in macro_dict and "INTRATE" not in tab_keys:
+            tab_names.append(MACRO_KPIS["INTRATE"][0])
+            tab_keys.append("INTRATE")
         tabs = st.tabs(tab_names)
         for i, key in enumerate(tab_keys):
             if key == "PIB_REALPIB":
-                df_pib = macro_dict["PIB"]
-                df_real = macro_dict["REALPIB"]
-                # Merge por fecha (outer)
-                df_merged = df_pib.merge(df_real, on="date", how="outer", suffixes=('_PIB', '_REAL'))
-                df_merged = df_merged.sort_values("date")
+                df_pib = macro_dict["PIB"][["date", "GDP"]]       # Solo 'date' y 'GDP'
+                df_real = macro_dict["REALPIB"][["date", "GDPC1"]] # Solo 'date' y 'GDPC1'
+                df_merged = df_pib.merge(df_real, on="date", how="outer").sort_values("date")
+                y_cols = []
+                if "GDP" in df_merged.columns:
+                    y_cols.append("GDP")
+                if "GDPC1" in df_merged.columns:
+                    y_cols.append("GDPC1")
+                # Solo elimina filas donde ambos sean nan
+                df_merged = df_merged.dropna(subset=y_cols, how='all')
                 df_merged = filtra_periodo(df_merged, periodo)
                 with tabs[i]:
-                    fig = px.line(
-                        df_merged, x="date",
-                        y=["PIB", "REALPIB"] if "PIB" in df_merged and "REALPIB" in df_merged
-                        else [c for c in df_merged.columns if c != "date"],
-                        labels={"value": "PIB", "variable": "Indicador"},
-                        title="Evolución PIB nominal y real"
-                    )
-                    # Renombra la leyenda si es necesario
-                    fig.for_each_trace(
-                        lambda t: t.update(name="PIB (nominal)" if "PIB" in t.name and "REAL" not in t.name else "PIB real")
-                    )
-                    fig.update_layout(height=270, margin=dict(l=5, r=5, t=35, b=18))
-                    st.plotly_chart(fig, use_container_width=True)
+                    if len(y_cols) > 0 and not df_merged.empty:
+                        legend_map = {
+                            "GDP": "PIB (nominal)",
+                            "GDPC1": "PIB real"
+                        }
+                        fig = px.line(
+                            df_merged, x="date", y=y_cols,
+                            labels={"value": "PIB", "variable": "Indicador"},
+                            title="Evolución PIB nominal y real"
+                        )
+                        # Renombrar leyendas de las líneas
+                        for t in fig.data:
+                            if t.name in legend_map:
+                                t.name = legend_map[t.name]
+                        fig.update_layout(height=270, margin=dict(l=5, r=5, t=35, b=18))
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.info("No hay datos suficientes para mostrar el PIB y PIB real.")
             else:
-                df = macro_dict[key]
+                if key not in macro_dict:
+                    continue
+                df = macro_dict[key].dropna()  # Aquí sí eliminamos nan
                 pretty, tooltip, col_val = MACRO_KPIS[key]
                 col_val = col_val or [c for c in df.columns if c != "date"][0]
                 df_filtrado = filtra_periodo(df, periodo)
+                df_filtrado = df_filtrado.dropna(subset=[col_val])
                 with tabs[i]:
-                    fig = px.line(df_filtrado, x="date", y=col_val, title=f"Evolución de {pretty}")
-                    fig.update_layout(height=270, margin=dict(l=5, r=5, t=35, b=18))
-                    st.plotly_chart(fig, use_container_width=True)
+                    if not df_filtrado.empty:
+                        fig = px.line(df_filtrado, x="date", y=col_val, title=f"Evolución de {pretty}")
+                        fig.update_layout(height=270, margin=dict(l=5, r=5, t=35, b=18))
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.info(f"No hay datos suficientes para mostrar {pretty}.")
+
+
+
+
 
 def show():
     vista_market()
