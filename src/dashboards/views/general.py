@@ -15,7 +15,7 @@ def show_header_and_periodo(periodos, default):
         periodo = st.selectbox("Periodo", list(periodos.keys()), index=default)
     return periodo, periodos[periodo]
 
-# ---------- Resumen textual ----------
+# ---------- Resumen Textual ----------
 def show_resumen(df_period, df_benchmarks_period):
     ret_cartera = get_total_return(df_period)
     best = None
@@ -25,7 +25,16 @@ def show_resumen(df_period, df_benchmarks_period):
         if ret > max_bench:
             max_bench = ret
             best = nombre
-    text = f"📊 <b>Tu cartera ha subido un <span style='color:#2ecc71'>{ret_cartera:.2%}</span> en el periodo seleccionado.</b> "
+    # Color y emoji según el rendimiento
+    if ret_cartera >= 0:
+        color = "#2ecc71"
+        emoji = "⬆️"
+        msg = "ha subido"
+    else:
+        color = "#e74c3c"
+        emoji = "⬇️"
+        msg = "ha bajado"
+    text = f"📊 <b>Tu cartera {msg} un <span style='color:{color}'>{ret_cartera:.2%}</span> {emoji} en el periodo seleccionado.</b> "
     if best and ret_cartera > max_bench:
         text += f"¡Has batido a todos los benchmarks! 🥇"
     elif best:
@@ -108,7 +117,7 @@ def show_var_gauge(df_portfolio):
     var_95_m = abs(var_95_d * (21 ** 0.5))
     var_95_y = abs(var_95_d * (252 ** 0.5))
     periodos = {"1 día": var_95_d, "1 mes": var_95_m, "1 año": var_95_y}
-    periodo = st.selectbox("Periodo VaR", list(periodos.keys()), key="periodo_var")
+    periodo = st.selectbox("Periodo VaR 95% de Confianza", list(periodos.keys()), key="periodo_var")
     valor = periodos[periodo]
     # Badge
     if valor < 3:

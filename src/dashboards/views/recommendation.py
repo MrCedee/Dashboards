@@ -38,10 +38,10 @@ def show_top_assets(actual_weights, recommended_weights):
 
     col1, col2 = st.columns(2)
     # Icono info discreto, alineado y pequeño
-    info_icon = "<span style='color:#888; font-size:1.2em; vertical-align:middle;' title='¿Qué significa esto?'>❓</span>"
+    info_icon = "<span style='color:#888; font-size:1.2em; vertical-align:middle;' title='La IA recomienda con más peso este activo'>❓</span>"
     badge_ia = "<span style='background:#E6F0FA; color:#1956A6; font-size:0.8em; border-radius:6px; padding:2px 7px; margin-left:8px; vertical-align:middle;'>IA</span>"
     badge_actual = "<span style='background:#EEE; color:#222; font-size:0.8em; border-radius:6px; padding:2px 7px; margin-left:8px; vertical-align:middle;'>Actual</span>"
-
+    info_icon2 = "<span style='color:#888; font-size:1.2em; vertical-align:middle;' title='Actualmente en la cartera este activo tiene más peso'>❓</span>"
     with col1:
         st.markdown(f"**Activo más recomendado** {badge_ia} {info_icon}", unsafe_allow_html=True)
         st.markdown(f"<span style='font-size:2.9em; font-weight:bold'>{activo_rec} <span style='font-size:1.2em; font-weight:600;'>({peso_rec:.1f}%)</span></span>", unsafe_allow_html=True)
@@ -54,7 +54,7 @@ def show_top_assets(actual_weights, recommended_weights):
             st.markdown(f"<span style='color:gray; font-size:1.1em'>= Peso casi igual al actual</span>", unsafe_allow_html=True)
 
     with col2:
-        st.markdown(f"**Activo más ponderado actualmente** {badge_actual} {info_icon}", unsafe_allow_html=True)
+        st.markdown(f"**Activo más ponderado actualmente** {badge_actual} {info_icon2}", unsafe_allow_html=True)
         st.markdown(f"<span style='font-size:2.9em; font-weight:bold'>{activo_act} <span style='font-size:1.2em; font-weight:600;'>({peso_act:.1f}%)</span></span>", unsafe_allow_html=True)
         if diff_act > 0.1:
             st.markdown(f"<span style='color:green; font-size:1.15em'>🟢 ↗ Se recomienda <b>COMPRAR</b> {diff_act:.1f}%</span>", unsafe_allow_html=True)

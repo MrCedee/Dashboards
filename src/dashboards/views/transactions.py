@@ -110,11 +110,24 @@ def vista_transacciones():
         # Solo icono en columna resultado, sin modificar nada más
         mostrar = mostrar[["fecha", "activo", "acción", "resultado", "cambio_peso_str", "precio_entrada", "precio_salida", "retorno_op"]]
 
+        # Renombrar columnas a nombres bonitos
+        mostrar = mostrar.rename(columns={
+            "fecha": "Fecha",
+            "activo": "Activo",
+            "acción": "Acción",
+            "resultado": "Resultado",
+            "cambio_peso_str": "Cambio Peso",
+            "precio_entrada": "Precio Inicio",
+            "precio_salida": "Precio Fin",
+            "retorno_op": "Retorno"
+        })
+
         # Mostrar tabla con resultado como HTML para icono y resto normal
         st.write(
             mostrar.to_html(escape=False, index=False),
             unsafe_allow_html=True,
         )
+
 
     st.markdown("---")
 

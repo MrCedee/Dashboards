@@ -11,7 +11,7 @@ from config import PORTFOLIO_HISTORY_PATH, BENCHMARKS_PATH, WEIGHTS_PATH, RF
 # ----- METAINFORMACIÓN -----
 METRIC_INFO = {
     "Sharpe Ratio":      {"help": "Sharpe mide la rentabilidad ajustada al riesgo. >1 bueno, <0.5 pobre.", "icon": "📈"},
-    "Sortino Ratio":     {"help": "Como Sharpe, pero solo penaliza caídas. >1 muy bueno.", "icon": "📉"},
+    "Sortino Ratio":     {"help": "Como Sharpe, pero solo penaliza riesgo de perdidas. >1 muy bueno.", "icon": "📉"},
     "Max Drawdown (%)":  {"help": "Mayor caída desde un máximo. Más negativo = peor. <10% poco riesgo, >30% mucho riesgo.", "icon": "📉"},
     "ARR (%)":           {"help": "Rentabilidad anualizada de la cartera.", "icon": "💸"},
     "Effective N":       {"help": "Nivel de diversificación. Máximo=número de activos.", "icon": "🔢"},
@@ -51,8 +51,8 @@ def metric_color(metric, value):
         elif value < -0.05: return "#ffcdd2"
         else: return "#fff9c4"
     if metric == "Beta (vs SP500)":
-        if 0.9 <= value <= 1.1: return "#b9f6ca"
-        elif value < 0.7 or value > 1.3: return "#ffcdd2"
+        if 0.8 <= value <= 1.2: return "#b9f6ca"
+        elif value < 0.6 or value > 1.4: return "#ffcdd2"
         else: return "#fff9c4"
     return "#f6f6fa"
 
@@ -112,9 +112,9 @@ def vista_performance():
     badge = "🥇" if mejor_kpi >= 2 else ("🟢" if mejor_kpi == 1 else "🟠")
     st.markdown(
         f"<div style='font-size:1.2em;font-weight:bold;background:#eef8ed;padding:10px 20px;border-radius:12px;display:inline-block'>"
-        f"{badge} Tu cartera tiene un Sharpe de <b>{metrics['Sharpe Ratio']:.2f}</b> y una rentabilidad anualizada de <b>{metrics['ARR (%)']:.1f}%</b>. "
+        f"{badge} Tu cartera tiene un Sharpe (rentabilidad ajustada al riesgo) de <b>{metrics['Sharpe Ratio']:.2f}</b> y una rentabilidad anualizada de <b>{metrics['ARR (%)']:.1f}%</b>. "
         f"Diversificación: <b>{metrics['Effective N']:.1f}/{n_assets}</b>. "
-        f"MDD: <b>{metrics['Max Drawdown (%)']:.1f}%</b>."
+        f"MDD (Máxima caida): <b>{metrics['Max Drawdown (%)']:.1f}%</b>."
         "</div>", unsafe_allow_html=True
     )
 

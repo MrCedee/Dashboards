@@ -12,6 +12,9 @@ from config import FECHA_CORTE
 # --- Importa las vistas correctamente ---
 from src.dashboards.views import general, performance, recommendation, asset_summary, transactions, market_overview
 # --- Sidebar navegación ---
+st.sidebar.title("Portfolio Manager Demo")
+st.sidebar.caption("TFM • Marcos Cedenilla Bonet")
+st.sidebar.caption(f"FECHA: {FECHA_CORTE.strftime('%d/%m/%Y')}")
 st.sidebar.title("Menú de navegación")
 
 VIEWS = [
@@ -25,10 +28,7 @@ VIEWS = [
 
 selected_view = st.sidebar.selectbox("Selecciona una vista:", VIEWS)
 
-# --- Cabecera general ---
-st.title("Portfolio Manager Demo")
-st.caption("TFM • Marcos Cedenilla Bonet")
-st.caption(f"FECHA: {FECHA_CORTE.strftime('%d/%m/%Y')}")
+
 
 
 # --- Router principal ---

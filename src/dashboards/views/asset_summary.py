@@ -64,27 +64,27 @@ def resumen_ejecutivo(last_fund, last_tech, price, weight, per):
     resumen = []
     if per is not None:
         if per > 30:
-            resumen.append("PER alto")
+            resumen.append("PER (Ratio Precio Beneficios) alto")
         elif per < 10:
-            resumen.append("PER bajo")
+            resumen.append("PER (Ratio Precio Beneficios) bajo")
     if last_fund["Current_Ratio"] < 1.5:
-        resumen.append("liquidez baja")
+        resumen.append("Liquidez baja")
     if last_fund["Debt_to_Equity"] > 2:
-        resumen.append("endeudamiento alto")
+        resumen.append("Endeudamiento alto")
     if last_fund["ROE_Adj"] > 20:
         resumen.append("ROE excelente")
     elif last_fund["ROE_Adj"] < 0:
         resumen.append("ROE negativo")
     if weight > 10:
-        resumen.append("peso alto en cartera")
+        resumen.append("Peso alto en cartera")
     if last_tech['rsi'] > 70:
-        resumen.append("sobrecompra técnica")
+        resumen.append("Sobrecompra técnica")
     if last_tech['rsi'] < 30:
-        resumen.append("sobreventa técnica")
+        resumen.append("Sobreventa técnica")
     if len(resumen) == 0:
         resumen_txt = "Todo en parámetros normales."
     else:
-        resumen_txt = " • ".join(resumen).capitalize()
+        resumen_txt = " • ".join(resumen)
     return f"**Resumen ejecutivo:** {resumen_txt}"
 
 def select_asset():
@@ -126,6 +126,18 @@ def show_main_megacard(last_fund, last_tech, price, weight, per, ret, mdd):
     ret_fmt     = f"{ret*100:.2f}%"  if ret is not None else "N/A"
     mdd_fmt     = f"{mdd*100:.2f}%"  if mdd is not None else "N/A"
 
+    # Tooltips explicativos para cada métrica
+    tooltips = {
+        "Precio actual": "Último precio de cotización del activo.",
+        "Peso actual": "Porcentaje del valor total de la cartera invertido en este activo. Más peso implica más exposición al riesgo de este activo.",
+        "PER": "Relación Precio/Beneficio (PER): mide cuántas veces los beneficios anuales están recogidos en el precio. Un PER alto (>25-30) puede indicar sobrevaloración; bajo (<10) puede indicar infravaloración o problemas. Depende del sector.",
+        "Current Ratio": "Ratio de liquidez corriente: activos corrientes entre pasivos corrientes. Mayor a 1.5 es sano, menor a 1 indica posibles problemas de liquidez.",
+        "Deuda/Equity": "Nivel de endeudamiento: deuda total sobre patrimonio. Valores bajos (<1-2) son conservadores; altos (>2) implican mayor riesgo financiero.",
+        "ROE ajustado": "Rentabilidad sobre recursos propios (ROE): beneficio neto sobre fondos propios. Cuanto más alto (>15-20%) mejor, pero valores extremos pueden indicar riesgo.",
+        "Rent. inicio": "Rentabilidad acumulada desde el inicio del periodo considerado. Más es mejor.",
+        "Max Drawdown": "Caída máxima: mayor pérdida sufrida desde un pico hasta el siguiente valle. Menor es mejor (menor riesgo).",
+    }
+
     st.markdown(
         """
         <style>
@@ -133,22 +145,24 @@ def show_main_megacard(last_fund, last_tech, price, weight, per, ret, mdd):
         .megaitem {background:#f9f9fa;padding:16px 8px;border-radius:10px;text-align:center;box-shadow:0 2px 8px #0001;}
         .badge {font-size:1.1em;}
         .kpinum {font-size:1.7em;font-weight:700;}
+        .kpilabel {font-size:1.07em;}
         </style>
         """,
         unsafe_allow_html=True,
     )
     st.markdown(
         f"<div class='megagrid'>"
-        f"<div class='megaitem'>Precio actual<br><span class='kpinum'>{price_fmt}</span></div>"
-        f"<div class='megaitem'>Peso actual<br><span class='kpinum'>{weight_fmt}</span></div>"
-        f"<div class='megaitem'>PER<br><span class='kpinum'>{per_fmt}</span> <span class='badge'>{badge_alert(per,'PER')}</span></div>"
-        f"<div class='megaitem'>Current Ratio<br><span class='kpinum'>{cr_fmt}</span> <span class='badge'>{badge_alert(last_fund['Current_Ratio'],'Current_Ratio')}</span></div>"
-        f"<div class='megaitem'>Deuda/Equity<br><span class='kpinum'>{de_fmt}</span> <span class='badge'>{badge_alert(last_fund['Debt_to_Equity'],'Debt_to_Equity')}</span></div>"
-        f"<div class='megaitem'>ROE ajustado<br><span class='kpinum'>{roe_fmt}</span> <span class='badge'>{badge_alert(last_fund['ROE_Adj'],'ROE_Adj')}</span></div>"
-        f"<div class='megaitem'>Rent. inicio<br><span class='kpinum'>{ret_fmt}</span></div>"
-        f"<div class='megaitem'>Max Drawdown<br><span class='kpinum'>{mdd_fmt}</span></div>"
+        f"<div class='megaitem'><span class='kpilabel' title='{tooltips['Precio actual']}'>Precio actual</span><br><span class='kpinum'>{price_fmt}</span></div>"
+        f"<div class='megaitem'><span class='kpilabel' title='{tooltips['Peso actual']}'>Peso actual</span><br><span class='kpinum'>{weight_fmt}</span></div>"
+        f"<div class='megaitem'><span class='kpilabel' title='{tooltips['PER']}'>PER</span><br><span class='kpinum'>{per_fmt}</span> <span class='badge'>{badge_alert(per,'PER')}</span></div>"
+        f"<div class='megaitem'><span class='kpilabel' title='{tooltips['Current Ratio']}'>Current Ratio</span><br><span class='kpinum'>{cr_fmt}</span> <span class='badge'>{badge_alert(last_fund['Current_Ratio'],'Current_Ratio')}</span></div>"
+        f"<div class='megaitem'><span class='kpilabel' title='{tooltips['Deuda/Equity']}'>Deuda/Equity</span><br><span class='kpinum'>{de_fmt}</span> <span class='badge'>{badge_alert(last_fund['Debt_to_Equity'],'Debt_to_Equity')}</span></div>"
+        f"<div class='megaitem'><span class='kpilabel' title='{tooltips['ROE ajustado']}'>ROE ajustado</span><br><span class='kpinum'>{roe_fmt}</span> <span class='badge'>{badge_alert(last_fund['ROE_Adj'],'ROE_Adj')}</span></div>"
+        f"<div class='megaitem'><span class='kpilabel' title='{tooltips['Rent. inicio']}'>Rent. inicio</span><br><span class='kpinum'>{ret_fmt}</span></div>"
+        f"<div class='megaitem'><span class='kpilabel' title='{tooltips['Max Drawdown']}'>Max Drawdown</span><br><span class='kpinum'>{mdd_fmt}</span></div>"
         "</div>", unsafe_allow_html=True
     )
+
 
 
 def show_technical_kpis(last_tech, prev_tech):

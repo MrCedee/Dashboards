@@ -6,6 +6,38 @@ from src.utils.data_loader import load_benchmarks
 from config import MARKETS_PATH
 from datetime import timedelta
 
+# Define aquí si más es mejor (True) o peor (False) para cada KPI
+METRIC_POSITIVE_TREND = {
+    "GDP": True,          # PIB: más es mejor
+    "GDPC1": True,        # PIB real: más es mejor
+    "TASADES": False,     # Desempleo: menos es mejor
+    "CPI": False,         # Inflación: menos es mejor
+    "M2": None,           # Liquidez: depende
+    "OIL": None,          # Petróleo: neutral/depende
+    "DJ": True,
+    "NASDAQ100": True,
+    "VIXCLS": False,      # Volatilidad: menos es mejor
+    "DXY": None,          # Dólar: neutral/depende
+    "INTRATE": None,     # Tipo interés: depende
+    "yield_curve": True,  # Curva: depende
+}
+
+TOOLTIPS_EXPLICATIVOS = {
+    "GDP": "Producto Interior Bruto: mide el valor total de bienes y servicios producidos. Más es mejor.",
+    "GDPC1": "PIB real: ajustado por inflación. Más es mejor.",
+    "TASADES": "Tasa de desempleo: porcentaje de población sin trabajo. Menos es mejor.",
+    "CPI": "Índice de precios al consumo: mide la inflación. Menos es mejor.",
+    "M2": "Liquidez monetaria: cantidad de dinero en circulación. El impacto depende del contexto",
+    "OIL": "Precio del petróleo. El impacto depende del contexto.",
+    "DJ": "Índice Dow Jones: referencia bursátil. Más es mejor.",
+    "NASDAQ100": "Índice Nasdaq 100. Más es mejor.",
+    "VIXCLS": "Índice VIX: mide la volatilidad esperada. Menos es mejor.",
+    "DXY": "Índice dólar. El impacto depende del contexto.",
+    "INTRATE": "Tasa de interés: coste del dinero. Menos es mejor para el crecimiento económico, pero puede traer inflación",
+    "yield_curve": "Curva de tipos: diferencia entre tipos largos y cortos. Más es mejor (curva positiva)."
+}
+
+
 def info(texto):
     return f"<span style='color:#aaa;font-size:1em;vertical-align:middle;margin-left:5px' title='{texto}'>●</span>"
 
@@ -29,15 +61,38 @@ def get_last_and_yoy(df, col_value=None):
         yoy = None
     return last, prev, yoy
 
-def trend_icon(val):
+def trend_icon(val, key=None):
+    sentido_positivo = METRIC_POSITIVE_TREND.get(key, True)
+    color_positive = "#3cb371"  # verde
+    color_negative = "#d33"     # rojo
+    color_neutro = "#888"       # gris neutro
+
     if val is None:
-        return ""
+        return f'<span style="color:{color_neutro};font-size:1.05em;margin-left:5px" title="Sin cambio relevante">→</span>'
+
+    if sentido_positivo is None:
+        # Neutro: arriba/abajo según signo, pero siempre gris
+        if val > 1:
+            return f'<span style="color:{color_neutro};font-size:1.05em;margin-left:5px" title="Arriba (neutro)">🡅</span>'
+        elif val < -1:
+            return f'<span style="color:{color_neutro};font-size:1.05em;margin-left:5px" title="Abajo (neutro)">🡇</span>'
+        else:
+            return f'<span style="color:{color_neutro};font-size:1.05em;margin-left:5px" title="Sin cambio relevante">→</span>'
     if val > 1:
-        return '<span style="color:#3cb371;font-size:1.05em;margin-left:5px">🡅</span>'
+        if sentido_positivo:
+            return f'<span style="color:{color_positive};font-size:1.05em;margin-left:5px" title="Mejora">🡅</span>'
+        else:
+            return f'<span style="color:{color_negative};font-size:1.05em;margin-left:5px" title="Empeora">🡅</span>'
     elif val < -1:
-        return '<span style="color:#d33;font-size:1.05em;margin-left:5px">🡇</span>'
+        if sentido_positivo:
+            return f'<span style="color:{color_negative};font-size:1.05em;margin-left:5px" title="Empeora">🡇</span>'
+        else:
+            return f'<span style="color:{color_positive};font-size:1.05em;margin-left:5px" title="Mejora">🡇</span>'
     else:
-        return '<span style="color:#f5bb00;font-size:1.05em;margin-left:5px">→</span>'
+        return f'<span style="color:{color_neutro};font-size:1.05em;margin-left:5px" title="Sin cambio relevante">→</span>'
+
+def question_tooltip(texto):
+    return f"""<span style="color:#2196f3;font-size:1.13em;vertical-align:middle;margin-left:7px;cursor:pointer;" title="{texto}">❔</span>"""
 
 def badge_color(val, bad_high=None, bad_low=None):
     if val is None:
@@ -108,11 +163,12 @@ def market_summary_yoy(macro_dict):
         vix, _, yoy_vix = get_last_and_yoy(macro_dict["VIXCLS"])
         oil, _, yoy_oil = get_last_and_yoy(macro_dict["OIL"])
         resumen = (
+            "<b>YoY = Cambio Anual</b><br> "
             f"<b>PIB</b> {gdp:,.0f} (<b>{yoy_gdp:+.2f}%</b> YoY), "
-            f"<b>inflación</b> {cpi:.2f} (<b>{yoy_cpi:+.2f}%</b> YoY), "
-            f"<b>desempleo</b> {unemp:.2f}% (<b>{yoy_unemp:+.2f}%</b> YoY), "
-            f"<b>VIX</b> {vix:.1f} (<b>{yoy_vix:+.2f}%</b> YoY), "
-            f"<b>petróleo</b> {oil:.2f} (<b>{yoy_oil:+.2f}%</b> YoY)."
+            f"<b>Inflación (IPC)</b> {cpi:.2f} (<b>{yoy_cpi:+.2f}%</b> YoY), "
+            f"<b>Desempleo</b> {unemp:.2f}% (<b>{yoy_unemp:+.2f}%</b> YoY), "
+            f"<b>VIX (Volatilidad)</b> {vix:.1f} (<b>{yoy_vix:+.2f}%</b> YoY), "
+            f"<b>Petróleo</b> {oil:.2f} (<b>{yoy_oil:+.2f}%</b> YoY)."
         )
     except Exception:
         resumen = "No hay suficientes datos recientes para mostrar el resumen ejecutivo."
@@ -157,14 +213,21 @@ def vista_market():
             if last is None:
                 cols[i].markdown(f"<span style='color:#888'>{pretty}</span>", unsafe_allow_html=True)
                 continue
-            # Badge color segun thresholds
-            highlight = badge_color(yoy, bad_high=thresholds.get("bad_high"), bad_low=thresholds.get("bad_low"))
+
+            # Destacar solo si es negativo/positivo, no en neutros
+            sentido = METRIC_POSITIVE_TREND.get(key, True)
+            highlight = ""
+            if sentido is not None:
+                highlight = badge_color(yoy, bad_high=thresholds.get("bad_high"), bad_low=thresholds.get("bad_low"))
+
             # Valor y cambio
             val_fmt = f"{last:,.2f}" if abs(last) > 1 else f"{last:.2%}"
             yoy_fmt = f"{yoy:+.2f}%" if yoy is not None else "N/A"
-            icon = trend_icon(yoy)
+            icon = trend_icon(yoy, key)
+            tooltip_icon = question_tooltip(TOOLTIPS_EXPLICATIVOS.get(key, tooltip))
+
             cols[i].markdown(
-                f"<div style='font-weight:bold'>{pretty}{info(tooltip)}</div>"
+                f"<div style='font-weight:bold'>{pretty}{tooltip_icon}</div>"
                 f"<div style='font-size:1.6em;{highlight}display:flex;align-items:center;gap:7px'>"
                 f"{val_fmt}{icon}"
                 f"</div>"
